@@ -1,14 +1,15 @@
-const express = require("express");
-
+const express = require('express');
 const app = express();
+
 app.use(express.json());
 
-const ADMIN_PIN = process.env.ADMIN_PIN || "1234";
+const ADMIN_PIN = process.env.ADMIN_PIN || '1234';
 
 let dados = {
-  estado: "EM ESPERA",
-  esp32: "ONLINE",
+  estado: 'EM ESPERA',
+  esp32: 'ONLINE',
   objectoDetectado: false,
+  situacao: 'AGUARDANDO',
 
   total: 0,
   aprovados: 0,
@@ -20,33 +21,30 @@ let dados = {
   temperatura: 0,
   humidade: 0,
 
-  vibracao: "NORMAL",
-  alerta: "NENHUM",
-  situacao: "AGUARDANDO",
+  vibracao: 'NORMAL',
+  alerta: 'NENHUM',
 
   actividades: []
 };
 
 function registarActividade(texto) {
-  const agora = new Date().toLocaleTimeString("pt-PT", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit"
+  const hora = new Date().toLocaleTimeString('pt-PT', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
   });
 
   dados.actividades.unshift({
     texto: texto,
-    hora: agora
+    hora: hora
   });
 
   dados.actividades = dados.actividades.slice(0, 5);
 }
 
-app.get("/", (req, res) => {
+app.get('/', (req, res) => {
 
-  res.send(`
-
-<!DOCTYPE html>
+  res.send(`<!doctype html>
 
 <html lang="pt">
 
@@ -55,7 +53,7 @@ app.get("/", (req, res) => {
 <meta charset="UTF-8">
 
 <meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+content="width=device-width,initial-scale=1.0">
 
 <title>Monitorização da Esteira</title>
 
@@ -69,7 +67,7 @@ body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: #07111f;
-  color: white;
+  color: #fff;
 }
 
 header {
@@ -100,7 +98,7 @@ h1 {
   font-size: 13px;
 }
 
-.status-top {
+.status {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -117,7 +115,7 @@ h1 {
   font-weight: bold;
 }
 
-.badge.waiting {
+.waiting {
   background: #273143;
   color: #a9b7c8;
 }
@@ -128,9 +126,8 @@ h1 {
   padding: 18px;
 }
 
-.section-title {
+.title {
   color: #7890aa;
-
   font-size: 11px;
 
   text-transform: uppercase;
@@ -145,15 +142,15 @@ h1 {
   gap: 10px;
 }
 
-.main-grid {
+.main {
   grid-template-columns: 1.2fr 1fr;
 }
 
-.production-grid {
+.three {
   grid-template-columns: repeat(3, 1fr);
 }
 
-.monitor-grid {
+.four {
   grid-template-columns: repeat(4, 1fr);
 }
 
@@ -167,7 +164,7 @@ h1 {
   padding: 15px;
 }
 
-.card-title {
+.label {
   color: #8fa4bd;
 
   font-size: 11px;
@@ -201,15 +198,11 @@ h1 {
   color: #ff667a;
 }
 
-.yellow {
-  color: #ffc857;
-}
-
 .blue {
   color: #61b8ff;
 }
 
-.object-card {
+.object {
   display: flex;
 
   justify-content: space-between;
@@ -217,16 +210,6 @@ h1 {
   align-items: center;
 
   gap: 15px;
-}
-
-.object-state {
-  font-size: 25px;
-  font-weight: bold;
-}
-
-.height-value {
-  font-size: 27px;
-  font-weight: bold;
 }
 
 .bar {
@@ -241,10 +224,10 @@ h1 {
   margin-top: 12px;
 }
 
-.bar-fill {
+.fill {
   height: 100%;
 
-  width: 0%;
+  width: 0;
 
   background: #61b8ff;
 
@@ -266,11 +249,6 @@ h1 {
   text-align: center;
 }
 
-.activity-list {
-  display: grid;
-  gap: 0;
-}
-
 .activity {
   display: flex;
 
@@ -286,12 +264,11 @@ h1 {
 }
 
 .activity:last-child {
-  border-bottom: none;
+  border-bottom: 0;
 }
 
-.activity-time {
+.time {
   color: #71869e;
-
   white-space: nowrap;
 }
 
@@ -323,11 +300,7 @@ button {
 
 button.secondary {
   background: #1b2c42;
-  color: white;
-}
-
-button:hover {
-  opacity: .9;
+  color: #fff;
 }
 
 .footer {
@@ -356,8 +329,8 @@ button:hover {
   padding: 20px;
 }
 
-.modal-box {
-  width: min(380px, 100%);
+.box {
+  width: min(380px,100%);
 
   background: #0d1d31;
 
@@ -381,12 +354,12 @@ input {
 
   background: #07111f;
 
-  color: white;
+  color: #fff;
 
   font-size: 16px;
 }
 
-.modal-actions {
+.actions {
   display: flex;
 
   gap: 8px;
@@ -402,34 +375,32 @@ input {
   min-height: 18px;
 }
 
-@media (max-width: 800px) {
+@media(max-width:800px) {
 
   .header {
-    align-items: flex-start;
-
     flex-direction: column;
+    align-items: flex-start;
   }
 
-  .main-grid,
-  .monitor-grid {
+  .main,
+  .four {
     grid-template-columns: 1fr 1fr;
   }
 
 }
 
-@media (max-width: 520px) {
+@media(max-width:520px) {
 
-  .main-grid,
-  .production-grid,
-  .monitor-grid {
+  .main,
+  .three,
+  .four {
     grid-template-columns: 1fr;
   }
 
-  .object-card,
+  .object,
   .controls {
-    align-items: flex-start;
-
     flex-direction: column;
+    align-items: flex-start;
   }
 
 }
@@ -454,7 +425,7 @@ Monitorização e manutenção preventiva
 
 </div>
 
-<div class="status-top">
+<div class="status">
 
 <div class="badge" id="esp32">
 ● ESP32 ONLINE
@@ -474,31 +445,39 @@ Monitorização e manutenção preventiva
 <div class="container">
 
 
-<div class="section-title">
+<div class="title">
 Estado actual
 </div>
 
 
-<div class="grid main-grid">
+<div class="grid main">
 
 
-<div class="card object-card">
+<div class="card object">
+
 
 <div>
 
-<div class="card-title">
+<div class="label">
 Objecto na entrada
 </div>
 
-<div class="object-state green" id="objecto">
+<div
+class="big green"
+id="objecto">
+
 NÃO
+
 </div>
 
 <div class="small">
+
 Situação:
+
 <span id="situacao">
 AGUARDANDO
 </span>
+
 </div>
 
 </div>
@@ -506,11 +485,11 @@ AGUARDANDO
 
 <div style="text-align:right">
 
-<div class="card-title">
+<div class="label">
 Altura
 </div>
 
-<div class="height-value">
+<div class="big">
 
 <span id="altura">
 0.0
@@ -534,19 +513,20 @@ cm
 
 </div>
 
+
 </div>
 
 
 <div class="card">
 
-<div class="card-title">
+<div class="label">
 Inspecção
 </div>
 
 <div class="bar">
 
 <div
-class="bar-fill"
+class="fill"
 id="barra">
 </div>
 
@@ -562,20 +542,21 @@ Sem medição
 
 </div>
 
+
 </div>
 
 
-<div class="section-title">
+<div class="title">
 Produção da sessão
 </div>
 
 
-<div class="grid production-grid">
+<div class="grid three">
 
 
 <div class="card production">
 
-<div class="card-title">
+<div class="label">
 Total
 </div>
 
@@ -592,7 +573,7 @@ id="total">
 
 <div class="card production">
 
-<div class="card-title">
+<div class="label">
 Aprovados
 </div>
 
@@ -609,7 +590,7 @@ id="aprovados">
 
 <div class="card production">
 
-<div class="card-title">
+<div class="label">
 Recusados
 </div>
 
@@ -627,17 +608,17 @@ id="recusados">
 </div>
 
 
-<div class="section-title">
+<div class="title">
 Monitorização
 </div>
 
 
-<div class="grid monitor-grid">
+<div class="grid four">
 
 
 <div class="card monitor">
 
-<div class="card-title">
+<div class="label">
 Temperatura
 </div>
 
@@ -654,7 +635,7 @@ id="temperatura">
 
 <div class="card monitor">
 
-<div class="card-title">
+<div class="label">
 Humidade
 </div>
 
@@ -671,7 +652,7 @@ id="humidade">
 
 <div class="card monitor">
 
-<div class="card-title">
+<div class="label">
 Vibração
 </div>
 
@@ -688,7 +669,7 @@ NORMAL
 
 <div class="card monitor">
 
-<div class="card-title">
+<div class="label">
 Alerta
 </div>
 
@@ -706,13 +687,13 @@ NENHUM
 </div>
 
 
-<div class="section-title">
+<div class="title">
 Actividade recente
 </div>
 
 
 <div
-class="card activity-list"
+class="card"
 id="actividades">
 
 <div class="activity">
@@ -721,7 +702,7 @@ id="actividades">
 A aguardar dados...
 </span>
 
-<span class="activity-time">
+<span class="time">
 --:--:--
 </span>
 
@@ -730,16 +711,17 @@ A aguardar dados...
 </div>
 
 
-<div class="section-title">
+<div class="title">
 Configuração
 </div>
 
 
 <div class="card controls">
 
+
 <div>
 
-<div class="card-title">
+<div class="label">
 Limite de altura
 </div>
 
@@ -762,6 +744,7 @@ ALTERAR LIMITE
 
 </button>
 
+
 </div>
 
 
@@ -780,7 +763,7 @@ class="modal"
 id="modal">
 
 
-<div class="modal-box">
+<div class="box">
 
 <h3>
 Alterar limite de altura
@@ -814,7 +797,7 @@ id="erro">
 </div>
 
 
-<div class="modal-actions">
+<div class="actions">
 
 <button
 class="secondary"
@@ -845,128 +828,132 @@ async function actualizar() {
 
   try {
 
-    const resposta =
-      await fetch("/api/dados");
+    const r =
+      await fetch('/api/dados');
 
     const d =
-      await resposta.json();
+      await r.json();
 
 
-    document.getElementById("estado")
+    document.getElementById('estado')
       .textContent =
-      "● " + d.estado;
+      '● ' + d.estado;
 
 
-    document.getElementById("esp32")
+    document.getElementById('esp32')
       .textContent =
-      "● ESP32 " + d.esp32;
+      '● ESP32 ' + d.esp32;
 
 
-    const objecto =
-      document.getElementById("objecto");
+    const o =
+      document.getElementById('objecto');
 
 
-    objecto.textContent =
+    o.textContent =
       d.objectoDetectado
-      ? "SIM"
-      : "NÃO";
+      ? 'SIM'
+      : 'NÃO';
 
 
-    objecto.className =
-      "object-state " +
+    o.className =
+      'big ' +
       (d.objectoDetectado
-      ? "green"
-      : "");
+      ? 'green'
+      : '');
 
 
-    document.getElementById("situacao")
+    document.getElementById('situacao')
       .textContent =
       d.situacao;
 
 
-    document.getElementById("total")
+    document.getElementById('total')
       .textContent =
       d.total;
 
 
-    document.getElementById("aprovados")
+    document.getElementById('aprovados')
       .textContent =
       d.aprovados;
 
 
-    document.getElementById("recusados")
+    document.getElementById('recusados')
       .textContent =
       d.recusados;
 
 
-    document.getElementById("altura")
+    document.getElementById('altura')
       .textContent =
       Number(d.altura)
       .toFixed(1);
 
 
-    document.getElementById("limite")
+    document.getElementById('limite')
       .textContent =
       Number(d.limiteAltura)
       .toFixed(1);
 
 
-    document.getElementById("limiteConfig")
+    document.getElementById('limiteConfig')
       .textContent =
       Number(d.limiteAltura)
       .toFixed(1);
 
 
-    const percent =
-      Math.min(
-        100,
-        Math.max(
-          0,
-          (d.altura /
-          d.limiteAltura) * 100
+    const p =
+      d.limiteAltura > 0
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            (d.altura /
+            d.limiteAltura) * 100
+          )
         )
-      );
+      : 0;
 
 
-    document.getElementById("barra")
+    document.getElementById('barra')
       .style.width =
-      percent + "%";
+      p + '%';
 
 
-    document.getElementById("alturaTexto")
+    document.getElementById('alturaTexto')
       .textContent =
       d.altura > 0
       ? Number(d.altura).toFixed(1)
-        + " cm / limite "
+        + ' cm / limite '
         + Number(d.limiteAltura).toFixed(1)
-        + " cm"
-      : "Sem medição";
+        + ' cm'
+      : 'Sem medição';
 
 
-    document.getElementById("temperatura")
+    document.getElementById('temperatura')
       .textContent =
       Number(d.temperatura)
       .toFixed(1)
-      + " °C";
+      + ' °C';
 
 
-    document.getElementById("humidade")
+    document.getElementById('humidade')
       .textContent =
-      d.humidade + " %";
+      d.humidade + ' %';
 
 
-    document.getElementById("vibracao")
+    document.getElementById('vibracao')
       .textContent =
       d.vibracao;
 
 
-    document.getElementById("alerta")
+    document.getElementById('alerta')
       .textContent =
       d.alerta;
 
 
     const lista =
-      document.getElementById("actividades");
+      document.getElementById(
+        'actividades'
+      );
 
 
     if (
@@ -975,30 +962,32 @@ async function actualizar() {
     ) {
 
       lista.innerHTML =
-        d.actividades.map(a => `
+        d.actividades.map(
+          function(a) {
 
-<div class="activity">
+            return (
+              '<div class="activity">' +
+              '<span>' +
+              a.texto +
+              '</span>' +
+              '<span class="time">' +
+              a.hora +
+              '</span>' +
+              '</div>'
+            );
 
-<span>
-${a.texto}
-</span>
-
-<span class="activity-time">
-${a.hora}
-</span>
-
-</div>
-
-`).join("");
+          }
+        ).join('');
 
     }
 
+  }
 
-  } catch (erro) {
+  catch (e) {
 
-    document.getElementById("esp32")
+    document.getElementById('esp32')
       .textContent =
-      "● ESP32 OFFLINE";
+      '● ESP32 OFFLINE';
 
   }
 
@@ -1007,30 +996,27 @@ ${a.hora}
 
 function abrirConfig() {
 
-  document.getElementById("modal")
+  document.getElementById('modal')
     .style.display =
-    "flex";
+    'flex';
 
+  document.getElementById('pin')
+    .value = '';
 
-  document.getElementById("pin")
-    .value = "";
+  document.getElementById('novoLimite')
+    .value = '';
 
-
-  document.getElementById("novoLimite")
-    .value = "";
-
-
-  document.getElementById("erro")
-    .textContent = "";
+  document.getElementById('erro')
+    .textContent = '';
 
 }
 
 
 function fecharConfig() {
 
-  document.getElementById("modal")
+  document.getElementById('modal')
     .style.display =
-    "none";
+    'none';
 
 }
 
@@ -1038,60 +1024,62 @@ function fecharConfig() {
 async function guardarLimite() {
 
   const pin =
-    document.getElementById("pin")
+    document.getElementById('pin')
     .value;
 
 
   const limite =
     Number(
-      document.getElementById("novoLimite")
-      .value
+      document.getElementById(
+        'novoLimite'
+      ).value
     );
 
 
-  if (!pin || !limite || limite <= 0) {
+  if (
+    !pin ||
+    !limite ||
+    limite <= 0
+  ) {
 
-    document.getElementById("erro")
+    document.getElementById('erro')
       .textContent =
-      "Preencha o PIN e um limite válido.";
+      'Preencha o PIN e um limite válido.';
 
     return;
 
   }
 
 
-  const resposta =
-    await fetch("/api/config", {
+  const r =
+    await fetch(
+      '/api/config',
+      {
+        method: 'POST',
 
-      method: "POST",
+        headers: {
+          'Content-Type':
+          'application/json'
+        },
 
-      headers: {
-        "Content-Type":
-        "application/json"
-      },
-
-      body: JSON.stringify({
-
-        pin: pin,
-
-        limiteAltura:
-        limite
-
-      })
-
-    });
+        body: JSON.stringify({
+          pin: pin,
+          limiteAltura: limite
+        })
+      }
+    );
 
 
-  const resultado =
-    await resposta.json();
+  const x =
+    await r.json();
 
 
-  if (!resposta.ok) {
+  if (!r.ok) {
 
-    document.getElementById("erro")
+    document.getElementById('erro')
       .textContent =
-      resultado.erro ||
-      "Não foi possível alterar.";
+      x.erro ||
+      'Não foi possível alterar.';
 
     return;
 
@@ -1116,142 +1104,134 @@ setInterval(
 
 </body>
 
-</html>
-
-`);
+</html>`);
 
 });
 
 
-app.get("/api/dados", (req, res) => {
-
-  res.json(dados);
-
-});
-
-
-app.post("/api/dados", (req, res) => {
-
-  dados = {
-
-    ...dados,
-
-    ...req.body
-
-  };
-
-  res.json({
-
-    sucesso: true,
-
-    dados: dados
-
-  });
-
-});
+app.get(
+  '/api/dados',
+  (req, res) => {
+    res.json(dados);
+  }
+);
 
 
-app.post("/api/config", (req, res) => {
+app.post(
+  '/api/dados',
+  (req, res) => {
 
-  const {
-    pin,
-    limiteAltura
-  } = req.body;
+    dados = {
+      ...dados,
+      ...req.body
+    };
 
-
-  if (pin !== ADMIN_PIN) {
-
-    return res.status(401).json({
-
-      erro: "PIN incorrecto."
-
+    res.json({
+      sucesso: true,
+      dados: dados
     });
 
   }
+);
 
 
-  const limite =
-    Number(limiteAltura);
+app.post(
+  '/api/config',
+  (req, res) => {
+
+    const pin =
+      req.body.pin;
+
+    const limite =
+      Number(
+        req.body.limiteAltura
+      );
 
 
-  if (!limite || limite <= 0) {
+    if (pin !== ADMIN_PIN) {
 
-    return res.status(400).json({
+      return res.status(401).json({
+        erro: 'PIN incorrecto.'
+      });
 
-      erro: "Limite inválido."
+    }
 
+
+    if (
+      !limite ||
+      limite <= 0
+    ) {
+
+      return res.status(400).json({
+        erro: 'Limite inválido.'
+      });
+
+    }
+
+
+    dados.limiteAltura =
+      limite;
+
+
+    registarActividade(
+      'Limite de altura alterado para ' +
+      limite.toFixed(1) +
+      ' cm'
+    );
+
+
+    res.json({
+      sucesso: true,
+      limiteAltura:
+        dados.limiteAltura
     });
 
   }
+);
 
 
-  dados.limiteAltura =
-    limite;
+app.post(
+  '/api/nova-sessao',
+  (req, res) => {
+
+    if (
+      req.body.pin !==
+      ADMIN_PIN
+    ) {
+
+      return res.status(401).json({
+        erro: 'PIN incorrecto.'
+      });
+
+    }
 
 
-  registarActividade(
-    "Limite de altura alterado para "
-    + limite.toFixed(1)
-    + " cm"
-  );
+    dados.total = 0;
+
+    dados.aprovados = 0;
+
+    dados.recusados = 0;
+
+    dados.alerta =
+      'NENHUM';
+
+    dados.situacao =
+      'AGUARDANDO';
+
+    dados.actividades = [];
 
 
-  res.json({
-
-    sucesso: true,
-
-    limiteAltura:
-      dados.limiteAltura
-
-  });
-
-});
+    registarActividade(
+      'Nova sessão iniciada'
+    );
 
 
-app.post("/api/nova-sessao", (req, res) => {
-
-  const {
-    pin
-  } = req.body;
-
-
-  if (pin !== ADMIN_PIN) {
-
-    return res.status(401).json({
-
-      erro: "PIN incorrecto."
-
+    res.json({
+      sucesso: true
     });
 
   }
-
-
-  dados.total = 0;
-
-  dados.aprovados = 0;
-
-  dados.recusados = 0;
-
-  dados.alerta = "NENHUM";
-
-  dados.situacao =
-    "AGUARDANDO";
-
-  dados.actividades = [];
-
-
-  registarActividade(
-    "Nova sessão iniciada"
-  );
-
-
-  res.json({
-
-    sucesso: true
-
-  });
-
-});
+);
 
 
 const PORT =
@@ -1263,8 +1243,8 @@ app.listen(
   () => {
 
     console.log(
-      "Servidor iniciado na porta "
-      + PORT
+      'Servidor iniciado na porta ' +
+      PORT
     );
 
   }
